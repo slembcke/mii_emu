@@ -40,7 +40,7 @@ enum {
  * https://www.mrob.com/pub/xapple2/colors.html
  */
 typedef struct mii_color_t {
-	uint32_t 	rgb;
+	uint32_t 	bgr;
 	uint32_t 	l : 8, index : 8;
 } mii_color_t;
 
@@ -48,7 +48,7 @@ typedef struct mii_color_t {
 		((uint8_t)(0.2126 * (r) + 0.7152 * (g) + 0.0722 * (b)))
 
 #define HI_RGB(r,g,b)	{ \
-		.rgb = (0xff000000 | ((b) << 16) | ((g) << 8) | (r)), \
+		.bgr = (0xff000000 | ((r) << 16) | ((g) << 8) | (b)), \
 		.l = HI_LUMA(r,g,b) \
 	}
 
@@ -208,8 +208,8 @@ mii_video_timer_cb(
 
 			if (reg == 0 || mode != MII_VIDEO_COLOR) {
 				const uint32_t clut[2] = {
-						mono[mode][0].rgb,
-						mono[mode][1].rgb };
+						mono[mode][0].bgr,
+						mono[mode][1].bgr };
 				for (int x = 0; x < 40; x++) {
 					uint32_t ext = (mii_bank_peek(aux, a + x) & 0x7f) |
 									((mii_bank_peek(main, a + x) & 0x7f) << 7);
@@ -233,7 +233,7 @@ mii_video_timer_cb(
 					for (int px = 0; px < 14 && dx < 80*2; px++, dx++) {
 						uint8_t pixel = reverse4(run & 0xf);
 						run >>= 4;
-						uint32_t col = dhires_colors[pixel].rgb;
+						uint32_t col = dhires_colors[pixel].bgr;
 						*screen++ = col;
 						*screen++ = col;
 						*screen++ = col;
@@ -282,7 +282,7 @@ mii_video_timer_cb(
 								idx = offset + odd + 1 - (i & 1) + 1;
 							}
 						}
-						uint32_t col = hires_colors[idx].rgb;
+						uint32_t col = hires_colors[idx].bgr;
 						*screen++ = col;
 						*screen++ = col;
 						*l2++ = col & C_SCANLINE_MASK;
@@ -291,7 +291,7 @@ mii_video_timer_cb(
 				} else {
 					for (int i = 0; i < 7; i++) {
 						uint8_t pixel = (run >> (2 + i)) & 1;
-						uint32_t col = mono[mode][pixel].rgb;
+						uint32_t col = mono[mode][pixel].bgr;
 						*screen++ = col;
 						*screen++ = col;
 						*l2++ = col & C_SCANLINE_MASK;
@@ -324,7 +324,7 @@ mii_video_timer_cb(
 					uint8_t bits = rom[mii->video.line & 0x07];
 					for (int pi = 0; pi < 7; pi++) {
 						uint8_t pixel = (bits >> pi) & 1;
-						uint32_t col = mono[mode][!pixel].rgb;
+						uint32_t col = mono[mode][!pixel].bgr;
 						*screen++ = col;
 						*l2++ = col & C_SCANLINE_MASK;
 						if (!col80) {
@@ -337,7 +337,7 @@ mii_video_timer_cb(
 					c = c >> ((lo_line & 1) * 4);
 
 					if (mode == MII_VIDEO_COLOR) {
-						uint32_t pixel = lores_colors[(x & col80) ^ col80][c & 0x0f].rgb;
+						uint32_t pixel = lores_colors[(x & col80) ^ col80][c & 0x0f].bgr;
 						for (int pi = 0; pi < 7; pi++) {
 							*screen++ = pixel;
 							*l2++ = pixel & C_SCANLINE_MASK;
@@ -352,7 +352,7 @@ mii_video_timer_cb(
 						 * res graphics in mono */
 						c |= (c << 4);
 						for (int pi = 0; pi < 7; pi++) {
-							uint32_t pixel = mono[mode][c & 1].rgb;
+							uint32_t pixel = mono[mode][c & 1].bgr;
 							c >>= 1;
 							*screen++ = pixel;
 							*l2++ = pixel & C_SCANLINE_MASK;
@@ -500,14 +500,14 @@ _mii_mish_video(
 	if (!argv[1] || !strcmp(argv[1], "list")) {
 		for (int i = 0; i < 16; i++) {
 			printf("%01x: %08x %08x %08x\n", i,
-					lores_colors[0][i].rgb,
-					lores_colors[1][i].rgb,
-					dhires_colors[i].rgb);
+					lores_colors[0][i].bgr,
+					lores_colors[1][i].bgr,
+					dhires_colors[i].bgr);
 		}
 		return;
 	}
 	if (!strcmp(argv[1], "gradient")) {
-		mii_video_print_color_table(lores_colors[0][1].rgb);
+		mii_video_print_color_table(lores_colors[0][1].bgr);
 
 		return;
 	}
